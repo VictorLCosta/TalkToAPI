@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Versioning;
 
-namespace TalkToAPI.Helpers
+namespace TalkToAPI.Helpers.Swagger
 {
     public static class ActionDescriptorExtensions
     {

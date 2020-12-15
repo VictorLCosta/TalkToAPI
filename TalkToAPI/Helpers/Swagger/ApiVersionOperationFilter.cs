@@ -2,7 +2,7 @@ using System.Linq;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace TalkToAPI.Helpers
+namespace TalkToAPI.Helpers.Swagger
 {
     public class ApiVersionOperationFilter : IOperationFilter
     {

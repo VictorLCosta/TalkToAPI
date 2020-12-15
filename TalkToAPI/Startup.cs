@@ -17,10 +17,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using TalkToAPI.Database;
-using TalkToAPI.Helpers;
+using TalkToAPI.Helpers.Swagger;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Repositories;
 using TalkToAPI.V1.Repositories.Contracts;
+using AutoMapper;
+using TalkToAPI.Helpers;
 
 namespace TalkToAPI
 {
@@ -56,6 +58,17 @@ namespace TalkToAPI
             .AddJsonOptions(opt => {
                 opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
+
+            #region Automapper Config
+
+            var configure = new MapperConfiguration(cfg => {
+                cfg.AddProfile(new DTOMapperProfile());
+            });
+
+            IMapper mapper = configure.CreateMapper();
+            services.AddSingleton(mapper);
+
+            #endregion
 
             #region Versioning Config
 
