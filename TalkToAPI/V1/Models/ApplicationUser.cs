@@ -8,5 +8,6 @@ namespace TalkToAPI.V1.Models
         public string FullName { get; set; }
         public string Slogan { get; set; }
         public virtual IEnumerable<Message> Messages { get; set; }
+        public Token Token { get; set; }
     }
 }

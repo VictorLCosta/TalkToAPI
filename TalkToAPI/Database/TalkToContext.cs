@@ -13,6 +13,7 @@ namespace TalkToAPI.Database
         }
 
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Token> Tokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder mb)
         {
@@ -26,6 +27,12 @@ namespace TalkToAPI.Database
                     .HasForeignKey(m => m.SenderId);
 
                 op.HasOne(m => m.To);
+            });
+
+            mb.Entity<Token>(op => {
+                op.HasOne(t => t.User)
+                    .WithOne(u => u.Token)
+                    .HasForeignKey<Token>(t => t.UserId);
             });
         }
     }
