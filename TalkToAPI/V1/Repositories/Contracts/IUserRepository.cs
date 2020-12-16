@@ -9,5 +9,6 @@ namespace TalkToAPI.V1.Repositories.Contracts
         Task CreateAsync(ApplicationUser user, string password);
         Task<ApplicationUser> FindAsync(string email, string password);
         Task<ApplicationUser> FindAsync(string id);
+        Task<string> UpdateAsync(ApplicationUser user);
     }
 }

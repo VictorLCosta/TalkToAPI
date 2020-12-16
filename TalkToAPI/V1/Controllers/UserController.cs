@@ -1,6 +1,9 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
@@ -9,10 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
 using TalkToAPI.V1.Repositories.Contracts;
 using TalkToAPI.V1.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using System.Security.Claims;
 using TalkToAPI.V1.Models.DTO;
+using AutoMapper;
 
 namespace TalkToAPI.V1.Controllers
 {
@@ -78,6 +79,74 @@ namespace TalkToAPI.V1.Controllers
                 return UnprocessableEntity(ModelState);
             }
         }
+
+        [HttpPost("")]
+        public async Task<IActionResult> Register([FromBody]DTOUser DTOuser)
+        {
+            if(DTOuser == null)
+            {
+                return BadRequest();
+            }
+
+            if(ModelState.IsValid)
+            {
+                ApplicationUser user = new ApplicationUser();
+
+                user.FullName = DTOuser.Name;
+                user.UserName = DTOuser.Email;
+                user.Email = DTOuser.Email;
+
+                await _repository.CreateAsync(user, DTOuser.Password);
+
+                return Created($"api/[controller]/{user.Id}", user);
+            }
+            else
+            {
+                return UnprocessableEntity();
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser)
+        {
+            if(_userManager.GetUserAsync(HttpContext.User).Result.Id != id)
+            {
+                return Forbid();
+            }
+
+            if(dtouser == null)
+            {
+                return BadRequest();
+            }
+
+            if(ModelState.IsValid)
+            {
+                var user = await _repository.FindAsync(dtouser.Email, dtouser.Password);
+                
+                if(user != null)
+                {
+                    var result = await _repository.UpdateAsync(user);
+                    await _userManager.RemovePasswordAsync(user);
+                    await _userManager.AddPasswordAsync(user, dtouser.Password);
+
+                    if(result != "True")
+                    {
+                        return UnprocessableEntity(result);
+                    }
+                    
+                    return Ok(user);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            else
+            {
+                return UnprocessableEntity();
+            }
+        }
+
 
         [HttpPost("Renovate")]
         public async Task<IActionResult> Renovate([FromBody]DTOToken _token)

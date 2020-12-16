@@ -8,7 +8,7 @@ namespace TalkToAPI.Helpers
     {
         public DTOMapperProfile()
         {
-            
+            CreateMap<ApplicationUser, DTOUser>();
         }
     }
 }

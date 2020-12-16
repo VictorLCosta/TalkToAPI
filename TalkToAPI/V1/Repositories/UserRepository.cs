@@ -49,5 +49,24 @@ namespace TalkToAPI.V1.Repositories
         {
             return await _context.FindByIdAsync(id);
         }
+
+        public async Task<string> UpdateAsync(ApplicationUser user)
+        {
+            var result = await _context.UpdateAsync(user);
+            
+            if(!result.Succeeded)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                foreach(var errors in result.Errors)
+                {
+                    sb.AppendLine(errors.Description);
+                }
+
+                return sb.ToString();
+            }
+
+            return result.Succeeded.ToString();
+        }
     }
 }
