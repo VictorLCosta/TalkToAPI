@@ -14,6 +14,7 @@ using TalkToAPI.V1.Repositories.Contracts;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Models.DTO;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TalkToAPI.V1.Controllers
 {
@@ -105,7 +106,8 @@ namespace TalkToAPI.V1.Controllers
                 return UnprocessableEntity();
             }
         }
-
+        
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser)
         {
@@ -168,40 +170,6 @@ namespace TalkToAPI.V1.Controllers
             return BuildNewToken(user);
         }
 
-        [HttpPost("")]
-        public async Task<IActionResult> Create([FromBody]DTOUser _user)
-        {
-            if(_user == null)
-            {
-                return BadRequest();
-            }
-
-            if(ModelState.IsValid)
-            {
-                ApplicationUser user = new ApplicationUser();
-                user.FullName = _user.Name;
-                user.Email = _user.Email;
-
-                
-                var result = await _userManager.CreateAsync(user, _user.Password);
-                
-                if(!result.Succeeded)
-                {
-                    List<string> sb = new List<string>();
-                    foreach(IdentityError error in result.Errors)
-                    {
-                        sb.Add(error.Description);
-                    }
-                    return UnprocessableEntity(sb);
-                }
-
-                return Created($"api/[controller]/{user.Id}", user);
-            }
-            else
-            {
-                return UnprocessableEntity(ModelState);
-            }
-        }
 
         private DTOToken GenerateToken(ApplicationUser user)
         {
