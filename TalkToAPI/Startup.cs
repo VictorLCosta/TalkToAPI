@@ -146,6 +146,7 @@ namespace TalkToAPI
             #endregion
 
             //REPOSITORIES
+            services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
         }

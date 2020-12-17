@@ -1,4 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using TalkToAPI.V1.Models;
+using TalkToAPI.V1.Repositories.Contracts;
 
 namespace TalkToAPI.V1.Controllers
 {
@@ -7,14 +11,50 @@ namespace TalkToAPI.V1.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     public class MessageController : ControllerBase
     {
-        public IActionResult CreateNew()
+        private readonly IMessageRepository _repo;
+
+        public MessageController(IMessageRepository repo)
         {
-            return Ok();
+            _repo = repo;
         }
 
-        public IActionResult FindMessage()
+        [HttpPost("")]
+        public async Task<IActionResult> CreateNew([FromBody]Message message)
         {
-            return Ok();
+            if(message == null)
+            {
+                return BadRequest();
+            }
+
+            if(ModelState.IsValid)
+            {
+                try
+                {
+                    await _repo.CreateAsync(message);
+                    return Created($"api/[controller]/{message.Id}", message);
+                }
+                catch(Exception e)
+                {
+                    return UnprocessableEntity(e);
+                }
+            }
+            else
+            {
+                return UnprocessableEntity();
+            }
+        }
+
+        [HttpGet("{userOneId}/{userTwoId}")]
+        public IActionResult FindAllMessage(string userOneId, string userTwoId)
+        {
+            if(userOneId == userTwoId)
+            {
+                return UnprocessableEntity();
+            }
+
+            var result = _repo.FindAll(userOneId, userTwoId);
+
+            return Ok(result);
         }
     }
 }
