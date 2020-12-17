@@ -107,14 +107,26 @@ namespace TalkToAPI.V1.Controllers
             }
         }
         
+        [HttpGet("")]
+        public IActionResult FindAll()
+        {
+            return Ok(_repository.FindAllAsync());
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> FindUser(string id)
+        {
+            return Ok(await _repository.FindAsync(id));
+        }
+
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser)
         {
-            if(_userManager.GetUserAsync(HttpContext.User).Result.Id != id)
+            /*if(_userManager.GetUserAsync(HttpContext.User).Result.Id != id)
             {
                 return Forbid();
-            }
+            }*/
 
             if(dtouser == null)
             {

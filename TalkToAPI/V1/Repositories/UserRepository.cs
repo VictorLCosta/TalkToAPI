@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TalkToAPI.Database;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Repositories.Contracts;
@@ -30,6 +33,11 @@ namespace TalkToAPI.V1.Repositories
                 
                 throw new Exception($"Usuário não cadastrado! {sb.ToString()}");
             }
+        }
+
+        public IEnumerable<ApplicationUser> FindAllAsync()
+        {
+            return _context.Users.AsNoTracking();
         }
 
         public async Task<ApplicationUser> FindAsync(string email, string password)
