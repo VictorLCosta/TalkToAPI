@@ -2,8 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TalkToAPI.V1.Models.DTO
 {
-    public class DTOUser
+    public class DTOUser : DTOBase
     {
+        public string Id { get; set; }
+
         [Required]
         public string Name { get; set; }
 

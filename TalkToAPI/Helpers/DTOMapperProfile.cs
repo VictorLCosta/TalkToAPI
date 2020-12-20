@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AutoMapper;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Models.DTO;
@@ -8,7 +9,8 @@ namespace TalkToAPI.Helpers
     {
         public DTOMapperProfile()
         {
-            CreateMap<ApplicationUser, DTOUser>();
+            CreateMap<ApplicationUser, DTOUser>()
+                .ForMember(p => p.Name, o => o.MapFrom(src => src.FullName));
         }
     }
 }

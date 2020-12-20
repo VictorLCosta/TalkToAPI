@@ -2,7 +2,7 @@ using System;
 
 namespace TalkToAPI.V1.Models.DTO
 {
-    public class DTOToken
+    public class DTOToken : DTOBase
     {
         public string Token { get; set; }
         public string RefreshToken { get; set; }

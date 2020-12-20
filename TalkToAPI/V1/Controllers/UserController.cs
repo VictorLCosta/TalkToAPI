@@ -15,6 +15,7 @@ using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Models.DTO;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace TalkToAPI.V1.Controllers
 {
@@ -25,14 +26,16 @@ namespace TalkToAPI.V1.Controllers
     {
         private IConfiguration _conf;
 
+        private readonly IMapper _mapper;
         private readonly IUserRepository _repository;
         private readonly SignInManager<ApplicationUser> _manager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenRepository _tokenRepo;
 
-        public UserController(IConfiguration conf, IUserRepository repository, SignInManager<ApplicationUser> manager, UserManager<ApplicationUser> userManager, ITokenRepository tokenRepo)
+        public UserController(IConfiguration conf, IMapper mapper, IUserRepository repository, SignInManager<ApplicationUser> manager, UserManager<ApplicationUser> userManager, ITokenRepository tokenRepo)
         {
             _conf = conf;
+            _mapper = mapper;
             _repository = repository;
             _tokenRepo = tokenRepo;
             _manager = manager;
@@ -81,7 +84,7 @@ namespace TalkToAPI.V1.Controllers
             }
         }
 
-        [HttpPost("")]
+        [HttpPost("", Name = "Register")]
         public async Task<IActionResult> Register([FromBody]DTOUser DTOuser)
         {
             if(DTOuser == null)
@@ -99,7 +102,12 @@ namespace TalkToAPI.V1.Controllers
 
                 await _repository.CreateAsync(user, DTOuser.Password);
 
-                return Created($"api/[controller]/{user.Id}", user);
+                var dtouser = _mapper.Map<ApplicationUser, DTOUser>(user);
+                 dtouser.Links.Add(new DTOLink("create", Url.Link("Register", new { id = dtouser.Id } ), "POST"));
+                dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
+                dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
+
+                return Ok(dtouser);
             }
             else
             {
@@ -110,17 +118,31 @@ namespace TalkToAPI.V1.Controllers
         [HttpGet("")]
         public IActionResult FindAll()
         {
-            return Ok(_repository.FindAllAsync());
+            var users = _repository.FindAllAsync().ToList();
+            
+            var dtousers = _mapper.Map<List<ApplicationUser>, List<DTOUser>>(users);
+
+            foreach(var user in dtousers)
+            {
+                user.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = user.Id }), "GET"));
+            }
+
+            return Ok(dtousers);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "FindUser")]
         public async Task<IActionResult> FindUser(string id)
         {
-            return Ok(await _repository.FindAsync(id));
+            var dtouser = _mapper.Map<ApplicationUser, DTOUser>(await _repository.FindAsync(id));
+
+            dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
+            dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
+
+            return Ok(dtouser);
         }
 
         [Authorize]
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "Update")]
         public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser)
         {
             /*if(_userManager.GetUserAsync(HttpContext.User).Result.Id != id)
