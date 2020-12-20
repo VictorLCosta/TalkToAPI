@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Repositories.Contracts;
@@ -55,6 +56,25 @@ namespace TalkToAPI.V1.Controllers
             var result = _repo.FindAll(userOneId, userTwoId);
 
             return Ok(result);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartialUpdate(int id, [FromBody]JsonPatchDocument<Message> jsonPatch)
+        {
+            //JSONPatch
+            if(jsonPatch == null)
+            {
+                return BadRequest();
+            }
+
+            var message = await _repo.FindMessageAsync(id);
+
+            jsonPatch.ApplyTo(message);
+            message.Updated = DateTime.UtcNow;
+
+            await _repo.UpdateAsync(message);
+
+            return NoContent();
         }
     }
 }

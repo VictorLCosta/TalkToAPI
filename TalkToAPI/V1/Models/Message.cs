@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TalkToAPI.V1.Models
 {
@@ -13,8 +14,13 @@ namespace TalkToAPI.V1.Models
         public string Text { get; set; }
         public DateTime Created { get; set; }
 
+        public bool Removed { get; set; }
+        public DateTime Updated { get; set; }
+
         //Keys
         public string SenderId { get; set; }
+
+        [ForeignKey(nameof(To))]
         public string ToId { get; set; }
     }
 }
