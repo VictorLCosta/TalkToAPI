@@ -115,7 +115,7 @@ namespace TalkToAPI.V1.Controllers
             }
         }
         
-        [HttpGet("")]
+        [HttpGet("", Name = "FindAll")]
         public IActionResult FindAll()
         {
             var users = _repository.FindAllAsync().ToList();
@@ -127,7 +127,10 @@ namespace TalkToAPI.V1.Controllers
                 user.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = user.Id }), "GET"));
             }
 
-            return Ok(dtousers);
+            var list = new DTOList<DTOUser> { List = dtousers};
+            list.Links.Add(new DTOLink("self", Url.Link("FindAll", null), "GET"));
+
+            return Ok(list);
         }
 
         [HttpGet("{id}", Name = "FindUser")]
