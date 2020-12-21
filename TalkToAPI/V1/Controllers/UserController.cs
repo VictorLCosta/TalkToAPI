@@ -127,7 +127,7 @@ namespace TalkToAPI.V1.Controllers
                 user.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = user.Id }), "GET"));
             }
 
-            var list = new DTOList<DTOUser> { List = dtousers};
+            var list = new DTOList<DTOUser> { Results = dtousers};
             list.Links.Add(new DTOLink("self", Url.Link("FindAll", null), "GET"));
 
             return Ok(list);
