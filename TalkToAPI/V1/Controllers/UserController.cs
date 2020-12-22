@@ -6,15 +6,16 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
 using TalkToAPI.V1.Repositories.Contracts;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Models.DTO;
+using TalkToAPI.Helpers.Constants;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+
 using System.Linq;
 
 namespace TalkToAPI.V1.Controllers
@@ -85,7 +86,7 @@ namespace TalkToAPI.V1.Controllers
         }
 
         [HttpPost("", Name = "Register")]
-        public async Task<IActionResult> Register([FromBody]DTOUser DTOuser)
+        public async Task<IActionResult> Register([FromBody]DTOUser DTOuser, [FromHeader(Name = "Accept")]string mediaType)
         {
             if(DTOuser == null)
             {
@@ -102,12 +103,20 @@ namespace TalkToAPI.V1.Controllers
 
                 await _repository.CreateAsync(user, DTOuser.Password);
 
-                var dtouser = _mapper.Map<ApplicationUser, DTOUser>(user);
-                 dtouser.Links.Add(new DTOLink("create", Url.Link("Register", new { id = dtouser.Id } ), "POST"));
-                dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
-                dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
 
-                return Ok(dtouser);
+                if(mediaType == CustomMediaType.Hateoas)
+                {
+                    var dtouser = _mapper.Map<ApplicationUser, DTOUser>(user);
+                    dtouser.Links.Add(new DTOLink("create", Url.Link("Register", new { id = dtouser.Id } ), "POST"));
+                    dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
+                    dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
+
+                    return Ok(dtouser);
+                }
+                else
+                {
+                    return Ok(user);
+                }
             }
             else
             {
@@ -116,37 +125,58 @@ namespace TalkToAPI.V1.Controllers
         }
         
         [HttpGet("", Name = "FindAll")]
-        public IActionResult FindAll()
+        public IActionResult FindAll([FromHeader(Name = "Accept")]string mediaType)
         {
             var users = _repository.FindAllAsync().ToList();
-            
-            var dtousers = _mapper.Map<List<ApplicationUser>, List<DTOUser>>(users);
 
-            foreach(var user in dtousers)
+            if(mediaType == CustomMediaType.Hateoas)
             {
-                user.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = user.Id }), "GET"));
+                var dtousers = _mapper.Map<List<ApplicationUser>, List<DTOUser>>(users);
+
+                foreach(var user in dtousers)
+                {
+                    user.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = user.Id }), "GET"));
+                }
+
+                var list = new DTOList<DTOUser> { Results = dtousers};
+                list.Links.Add(new DTOLink("self", Url.Link("FindAll", null), "GET"));
+
+                return Ok(list);
             }
-
-            var list = new DTOList<DTOUser> { Results = dtousers};
-            list.Links.Add(new DTOLink("self", Url.Link("FindAll", null), "GET"));
-
-            return Ok(list);
+            else
+            {
+                return Ok(users);
+            }
+            
         }
 
         [HttpGet("{id}", Name = "FindUser")]
-        public async Task<IActionResult> FindUser(string id)
+        public async Task<IActionResult> FindUser(string id, [FromHeader(Name = "Accept")]string mediaType)
         {
-            var dtouser = _mapper.Map<ApplicationUser, DTOUser>(await _repository.FindAsync(id));
+            var user = await _repository.FindAsync(id);
+            if(user == null)
+            {
+                return NotFound();
+            }
 
-            dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
-            dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
+            if(mediaType == CustomMediaType.Hateoas)
+            {
+                var dtouser = _mapper.Map<ApplicationUser, DTOUser>(user);
 
-            return Ok(dtouser);
+                dtouser.Links.Add(new DTOLink("self", Url.Link("FindUser", new { id = dtouser.Id } ), "GET"));
+                dtouser.Links.Add(new DTOLink("update", Url.Link("Update", new { id = dtouser.Id } ), "PUT"));
+
+                return Ok(dtouser);
+            }
+            else
+            {
+                return Ok(user);
+            }
         }
 
         [Authorize]
         [HttpPut("{id}", Name = "Update")]
-        public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser)
+        public async Task<IActionResult> Update(string id, [FromBody]DTOUser dtouser, [FromHeader(Name = "Accept")]string mediaType)
         {
             /*if(_userManager.GetUserAsync(HttpContext.User).Result.Id != id)
             {
