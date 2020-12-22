@@ -23,6 +23,7 @@ using TalkToAPI.V1.Repositories;
 using TalkToAPI.V1.Repositories.Contracts;
 using AutoMapper;
 using TalkToAPI.Helpers;
+using TalkToAPI.Helpers.Constants;
 
 namespace TalkToAPI
 {
@@ -57,7 +58,7 @@ namespace TalkToAPI
                 var jsonOutput = config.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
                 if(jsonOutput != null)
                 {
-                    jsonOutput.SupportedMediaTypes.Add("application/vnd.talkto.hateoas+json");
+                    jsonOutput.SupportedMediaTypes.Add(CustomMediaType.Hateoas);
                 }
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)

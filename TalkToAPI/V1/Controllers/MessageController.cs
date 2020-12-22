@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using TalkToAPI.Helpers.Constants;
 using TalkToAPI.V1.Models;
 using TalkToAPI.V1.Models.DTO;
 using TalkToAPI.V1.Repositories.Contracts;
@@ -26,7 +27,7 @@ namespace TalkToAPI.V1.Controllers
         }
 
         [HttpPost("", Name = "CreateNew")]
-        public async Task<IActionResult> CreateNew([FromBody]Message message)
+        public async Task<IActionResult> CreateNew([FromBody]Message message, [FromHeader(Name = "Accept")]string mediaType)
         {
             if(message == null)
             {
@@ -39,11 +40,19 @@ namespace TalkToAPI.V1.Controllers
                 {
                     await _repo.CreateAsync(message);
 
-                    var dtomessage = _mapper.Map<Message, DTOMessage>(message);
-                    dtomessage.Links.Add(new DTOLink("self", Url.Link("CreateNew", null), "POST"));
-                    dtomessage.Links.Add(new DTOLink("update", Url.Link("PartialUpdate", new { id = message.Id }), "PATCH"));
+                    if(mediaType == CustomMediaType.Hateoas)
+                    {
+                        var dtomessage = _mapper.Map<Message, DTOMessage>(message);
+                        dtomessage.Links.Add(new DTOLink("self", Url.Link("CreateNew", null), "POST"));
+                        dtomessage.Links.Add(new DTOLink("update", Url.Link("PartialUpdate", new { id = message.Id }), "PATCH"));
 
-                    return Created($"api/[controller]/{message.Id}", dtomessage);
+                        return Created($"api/[controller]/{message.Id}", dtomessage);
+                    }
+                    else
+                    {
+                        return Created($"api/[controller]/{message.Id}", message);
+                    }
+                    
                 }
                 catch(Exception e)
                 {
@@ -66,7 +75,7 @@ namespace TalkToAPI.V1.Controllers
 
             var messages = _repo.FindAll(userOneId, userTwoId).ToList();
 
-            if(mediaType == "application/vnd.talkto.hateoas+json")
+            if(mediaType == CustomMediaType.Hateoas)
             {
                 var dtomessages = _mapper.Map<List<Message>, List<DTOMessage>>(messages);
 
@@ -83,7 +92,7 @@ namespace TalkToAPI.V1.Controllers
         }
 
         [HttpPatch("{id}", Name = "PartialUpdate")]
-        public async Task<IActionResult> PartialUpdate(int id, [FromBody]JsonPatchDocument<Message> jsonPatch)
+        public async Task<IActionResult> PartialUpdate(int id, [FromBody]JsonPatchDocument<Message> jsonPatch, [FromHeader(Name = "Accept")]string mediaType)
         {
             //JSONPatch
             if(jsonPatch == null)
@@ -98,8 +107,11 @@ namespace TalkToAPI.V1.Controllers
 
             await _repo.UpdateAsync(message);
 
-            var dtomessage = _mapper.Map<Message, DTOMessage>(message);
-            dtomessage.Links.Add(new DTOLink("update", Url.Link("PartialUpdate", new { id = message.Id }), "PATCH"));
+            if(mediaType == CustomMediaType.Hateoas)
+            {
+                var dtomessage = _mapper.Map<Message, DTOMessage>(message);
+                dtomessage.Links.Add(new DTOLink("update", Url.Link("PartialUpdate", new { id = message.Id }), "PATCH"));
+            }
 
             return NoContent();
         }
