@@ -53,6 +53,12 @@ namespace TalkToAPI
                 config.ReturnHttpNotAcceptable = true;
                 config.InputFormatters.Add(new XmlSerializerInputFormatter(config));
                 config.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+
+                var jsonOutput = config.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
+                if(jsonOutput != null)
+                {
+                    jsonOutput.SupportedMediaTypes.Add("application/vnd.talkto.hateoas+json");
+                }
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
             .AddJsonOptions(opt => {

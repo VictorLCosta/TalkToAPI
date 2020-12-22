@@ -57,7 +57,7 @@ namespace TalkToAPI.V1.Controllers
         }
 
         [HttpGet("{userOneId}/{userTwoId}", Name = "FindAllMessages")]
-        public IActionResult FindAllMessages(string userOneId, string userTwoId)
+        public IActionResult FindAllMessages(string userOneId, string userTwoId, [FromHeader(Name = "Accept")]string mediaType)
         {
             if(userOneId == userTwoId)
             {
@@ -65,12 +65,21 @@ namespace TalkToAPI.V1.Controllers
             }
 
             var messages = _repo.FindAll(userOneId, userTwoId).ToList();
-            var dtomessages = _mapper.Map<List<Message>, List<DTOMessage>>(messages);
 
-            var list = new DTOList<DTOMessage> { Results = dtomessages };
-            list.Links.Add(new DTOLink("self", Url.Link("FindAllMessages", null), "GET"));
+            if(mediaType == "application/vnd.talkto.hateoas+json")
+            {
+                var dtomessages = _mapper.Map<List<Message>, List<DTOMessage>>(messages);
 
-            return Ok(list);
+                var list = new DTOList<DTOMessage> { Results = dtomessages };
+                list.Links.Add(new DTOLink("self", Url.Link("FindAllMessages", null), "GET"));
+
+                return Ok(list);
+            }
+            else
+            {
+                return Ok(messages);
+            }
+
         }
 
         [HttpPatch("{id}", Name = "PartialUpdate")]
