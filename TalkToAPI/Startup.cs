@@ -53,8 +53,14 @@ namespace TalkToAPI
             services.AddCors(cfg => {
                 cfg.AddDefaultPolicy(policy => {
                     policy.WithOrigins("https://localhost:44376", "https://localhost:44376")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+
+                cfg.AddPolicy("AnyOrigin", policy => {
+                    policy.AllowAnyOrigin()
                           .WithMethods("GET")
-                          .WithHeaders("Accept", "Authorization");
+                          .AllowAnyHeader();
                 });
             });
 
