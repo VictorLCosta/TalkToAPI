@@ -50,6 +50,14 @@ namespace TalkToAPI
                 cfg.UseSqlite(Conf.GetConnectionString("TalkToContext"));
             });
 
+            services.AddCors(cfg => {
+                cfg.AddDefaultPolicy(policy => {
+                    policy.WithOrigins("https://localhost:44376", "https://localhost:44376")
+                          .WithMethods("GET")
+                          .WithHeaders("Accept", "Authorization");
+                });
+            });
+
             services.AddMvc(config => {
                 config.ReturnHttpNotAcceptable = true;
                 config.InputFormatters.Add(new XmlSerializerInputFormatter(config));
@@ -172,6 +180,7 @@ namespace TalkToAPI
             app.UseStatusCodePages();
             app.UseAuthentication();
             app.UseHttpsRedirection();
+            app.UseCors();
             app.UseMvc();
 
             app.UseSwagger();
